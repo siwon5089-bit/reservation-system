@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#153d70"><meta name="description" content="건설현장 강의실 예약 및 협력사 교육 일정 관리"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>강의실 예약 시스템</title>
+<style>
+:root{--navy:#153d70;--blue:#2862a8;--pale:#eaf2ff;--green:#187444;--red:#b42318;--line:#d9dee7}
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#182230;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:760px;margin:auto;padding:16px}.hero{background:var(--navy);color:white;border-radius:18px;padding:22px;margin-bottom:14px}
+h1{font-size:23px;margin:0 0 6px}.sub{color:#d9e8ff;font-size:13px}.stats{display:flex;gap:8px;margin-top:18px}.stat{flex:1;background:#ffffff1c;border-radius:10px;text-align:center;padding:10px}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#e0ebfa}
+nav{display:flex;background:#fff;padding:5px;border-radius:12px;margin-bottom:14px;gap:5px}nav button{flex:1;border:0;background:transparent;padding:12px;border-radius:9px;font-weight:700;color:#536173}nav button.active{background:var(--pale);color:var(--blue)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}h2{font-size:18px;margin:0 0 16px}label{display:block;font-size:14px;font-weight:700;margin:14px 0 7px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd2dc;border-radius:9px;font:inherit;background:white}textarea{min-height:70px;resize:vertical}
+.rooms{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.room{border:1px solid var(--line);border-radius:10px;padding:12px 6px;background:#fff;color:#253449;font-weight:700;cursor:pointer}.room small{display:block;font-weight:400;margin-top:5px;color:#687588}.room.selected{border:2px solid var(--blue);background:var(--pale);color:var(--blue)}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status{border-radius:9px;padding:12px;margin-top:12px;font-size:14px}.ok{background:#e8f7ed;color:var(--green)}.bad{background:#fdecec;color:var(--red)}
+button.primary{width:100%;border:0;background:var(--blue);color:white;border-radius:10px;padding:14px;font-size:16px;font-weight:700;margin-top:16px;cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}
+.muted{color:#687588;font-size:12px;line-height:1.5}.booking{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px}.bookinghead{display:flex;justify-content:space-between;gap:8px;align-items:center}.pill{font-size:12px;padding:5px 8px;border-radius:20px;background:#e8f7ed;color:var(--green)}.cancel{border:0;background:#fff0f0;color:var(--red);padding:7px 10px;border-radius:8px;margin-top:8px;cursor:pointer}
+.hidden{display:none!important}.empty{padding:16px;text-align:center;color:#687588;background:#f6f7f9;border-radius:9px;margin-top:8px}
+@media(max-width:420px){main{padding:10px}.card{padding:14px}.rooms{gap:5px}.room{font-size:12px}.hero{padding:18px}}
+</style>
+</head>
+<body><main>
+<header class="hero"><h1>강의실 예약 시스템</h1><div class="sub">안전보건교육 · 협력사 일정 관리</div>
+<div class="stats"><div class="stat"><b>3</b><span>강의 장소</span></div><div class="stat"><b id="totalBookings">0</b><span>예약 건수</span></div><div class="stat"><b id="totalPeople">0</b><span>교육 인원</span></div></div></header>
+<nav><button id="tabApply" class="active">예약 신청</button><button id="tabStatus">예약 현황</button></nav>
+<section id="applySection" class="card">
+<h2>교육 예약 신청서</h2>
+<label for="date">교육 날짜</label><input id="date" type="date" required>
+<label>강의 장소</label><div class="rooms" id="rooms"></div>
+<div class="times"><div><label for="start">시작 시간</label><input id="start" type="time" value="09:00" required></div><div><label for="end">종료 시간</label><input id="end" type="time" value="10:00" required></div></div>
+<div id="timeStatus" class="status ok">예약 가능 · 시간을 선택해 주세요.</div>
+<label for="kind">교육 종류</label><select id="kind"><option>정기안전보건교육</option><option>특별안전보건교육</option><option>신호수 및 유도원교육</option><option value="기타교육">기타교육 (직접 입력)</option></select>
+<div id="customWrap" class="hidden"><label for="custom">교육명 직접 입력</label><input id="custom" placeholder="교육명을 입력하세요"></div>
+<label for="company">협력사명</label><input id="company" placeholder="예: ○○건설" required>
+<label for="manager">신청 담당자</label><input id="manager" placeholder="담당자 이름" required>
+<label for="count">교육 인원</label><input id="count" type="number" min="1" value="10" required>
+<label for="note">기타 요청사항</label><textarea id="note" placeholder="필요한 사항을 입력하세요"></textarea>
+<button id="submit" class="primary">예약 신청하기</button><p class="muted">동일 날짜·동일 강의실에서 예약 시간이 겹치면 신청할 수 없습니다. 이 파일은 같은 브라우저에 저장되는 단독형 시제품입니다. 여러 협력사가 각자 휴대폰에서 공유하려면 온라인 데이터베이스 연결과 웹 배포가 필요합니다.</p>
+</section>
+<section id="statusSection" class="card hidden"><h2>예약 현황</h2>
+<label for="filterDate">조회 날짜</label><input id="filterDate" type="date">
+<label for="filterRoom">강의 장소</label><select id="filterRoom"><option value="전체">전체</option><option>안전교육장</option><option>소교육장</option><option>1층회의실</option></select>
+<div id="bookingList"></div><button id="export" class="primary">현재 예약 현황 복사하기</button>
+</section>
+</main>
+<script>
+const roomNames=["안전교육장","소교육장","1층회의실"];
+let room="안전교육장", bookings=[];
+try{bookings=JSON.parse(localStorage.getItem("classroomBookings")||"[]")}catch(e){bookings=[]}
+const $=id=>document.getElementById(id);
+const today=new Date();const localDate=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+$("date").value=localDate;$("filterDate").value=localDate;
+function save(){localStorage.setItem("classroomBookings",JSON.stringify(bookings));render()}
+function overlaps(a,b,c,d){return a<d&&b>c}
+function conflicts(){let d=$("date").value,s=$("start").value,e=$("end").value;return bookings.filter(b=>b.date===d&&b.room===room&&s&&e&&overlaps(s,e,b.start,b.end))}
+function renderRooms(){
+$("rooms").innerHTML="";
+roomNames.forEach((r,i)=>{let b=document.createElement("button");b.className="room"+(room===r?" selected":"");b.innerHTML=`강의실 ${i+1}<small>${r}</small>`;b.onclick=()=>{room=r;renderRooms();updateTimeStatus()};$("rooms").appendChild(b)})
+}
+function updateTimeStatus(){
+let s=$("start").value,e=$("end").value,conf=conflicts(),el=$("timeStatus"),submit=$("submit");
+if(!s||!e||s>=e){el.className="status bad";el.textContent="예약 불가 · 종료 시간은 시작 시간 이후로 입력해 주세요.";submit.disabled=true;return}
+if(conf.length){el.className="status bad";el.innerHTML="예약 불가 · 해당 시간과 겹치는 예약이 있습니다.<br>"+conf.map(b=>`${b.start}~${b.end} · ${b.company}`).join("<br>");submit.disabled=true;return}
+el.className="status ok";el.textContent="예약 가능 · 선택한 시간대에 중복 예약이 없습니다.";submit.disabled=false
+}
+function render(){
+$("totalBookings").textContent=bookings.length;$("totalPeople").textContent=bookings.reduce((n,b)=>n+Number(b.count||0),0);
+const d=$("filterDate").value,fr=$("filterRoom").value;
+let list=bookings.filter(b=>(!d||b.date===d)&&(fr==="전체"||b.room===fr)).sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
+$("bookingList").innerHTML=list.length?list.map(b=>`<article class="booking"><div class="bookinghead"><strong>${esc(b.company)}</strong><span class="pill">예약 완료</span></div><p>${esc(b.date)} · ${esc(b.room)} · ${esc(b.start)}~${esc(b.end)}</p><p>${esc(b.kind)} · ${esc(b.count)}명</p><p class="muted">담당자: ${esc(b.manager)}${b.note?'<br>요청사항: '+esc(b.note):''}</p><button class="cancel" data-cancel="${b.id}">예약 취소</button></article>`).join(""):'<div class="empty">해당 조건의 예약 내역이 없습니다.</div>';
+document.querySelectorAll("[data-cancel]").forEach(btn=>btn.onclick=()=>{if(confirm("이 예약을 취소할까요?")){bookings=bookings.filter(b=>String(b.id)!==btn.dataset.cancel);save();updateTimeStatus()}})
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("kind").onchange=()=>{$("customWrap").classList.toggle("hidden",$("kind").value!=="기타교육")};
+["date","start","end"].forEach(id=>$(id).addEventListener("input",updateTimeStatus));
+$("submit").onclick=()=>{
+updateTimeStatus();if($("submit").disabled)return;
+let company=$("company").value.trim(),manager=$("manager").value.trim(),count=Number($("count").value),kind=$("kind").value==="기타교육"?$("custom").value.trim():$("kind").value;
+if(!company||!manager||!Number.isFinite(count)||count<1||!kind){alert("협력사명, 담당자, 교육 인원과 교육명을 확인해 주세요.");return}
+if(conflicts().length){updateTimeStatus();return}
+bookings.push({id:Date.now(),date:$("date").value,room,start:$("start").value,end:$("end").value,company,manager,count,kind,note:$("note").value.trim()});save();alert("예약 신청이 완료되었습니다.");$("company").value="";$("manager").value="";$("count").value="10";$("note").value="";$("custom").value="";showTab("status");$("filterDate").value=$("date").value;render()
+};
+function showTab(which){let apply=which==="apply";$("applySection").classList.toggle("hidden",!apply);$("statusSection").classList.toggle("hidden",apply);$("tabApply").classList.toggle("active",apply);$("tabStatus").classList.toggle("active",!apply);if(!apply)render()}
+$("tabApply").onclick=()=>showTab("apply");$("tabStatus").onclick=()=>showTab("status");$("filterDate").onchange=render;$("filterRoom").onchange=render;
+$("export").onclick=async()=>{let d=$("filterDate").value,fr=$("filterRoom").value;let rows=bookings.filter(b=>(!d||b.date===d)&&(fr==="전체"||b.room===fr)).map(b=>`${b.date} | ${b.room} | ${b.start}~${b.end} | ${b.company} | ${b.kind} | ${b.count}명 | 담당자 ${b.manager}${b.note?" | "+b.note:""}`);try{await navigator.clipboard.writeText("강의실 예약 현황\n"+rows.join("\n"));alert("예약 현황을 복사했습니다.")}catch(e){prompt("아래 내용을 복사하세요","강의실 예약 현황\n"+rows.join("\n"))}};
+renderRooms();render();updateTimeStatus();
+</script><script>if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(err => console.warn("오프라인 기능 등록 실패", err))); }</script>
+</body></html>
